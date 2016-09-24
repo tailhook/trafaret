@@ -65,10 +65,11 @@ class DataError(ValueError):
     """
     __slots__ = ['error', 'name', 'value']
 
-    def __init__(self, error=None, name=None, value=_empty):
+    def __init__(self, error=None, name=None, value=_empty, trafaret=None):
         self.error = error
         self.name = name
         self.value = value
+        self.trafaret = trafaret
 
     def __str__(self):
         return str(self.error)
@@ -156,7 +157,7 @@ class Trafaret(object):
         """
         Shortcut method for raising validation error
         """
-        raise DataError(error=error, value=value)
+        raise DataError(error=error, value=value, trafaret=self)
 
     @staticmethod
     def _trafaret(trafaret):
@@ -304,7 +305,7 @@ class Or(Trafaret):
                 return trafaret.check(value)
             except DataError as e:
                 errors.append(e)
-        raise DataError(dict(enumerate(errors)))
+        raise DataError(dict(enumerate(errors)), trafaret=self)
 
     def __lshift__(self, trafaret):
         self.trafarets.append(self._trafaret(trafaret))
@@ -819,7 +820,7 @@ class List(Trafaret):
             except DataError as err:
                 errors[index] = err
         if errors:
-            raise DataError(error=errors)
+            raise DataError(error=errors, trafaret=self)
         return lst
 
     def __repr__(self):
@@ -1065,7 +1066,7 @@ class Dict(Trafaret):
                 elif key not in collect:
                     collect[key] = value[key]
         if errors:
-            raise DataError(error=errors)
+            raise DataError(error=errors, trafaret=self)
         return collect
 
     def keys_names(self):
@@ -1180,7 +1181,7 @@ class Mapping(Trafaret):
             else:
                 checked_mapping[checked_key] = checked_value
         if errors:
-            raise DataError(error=errors)
+            raise DataError(error=errors, trafaret=self)
         return checked_mapping
 
     def __repr__(self):
